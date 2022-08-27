@@ -15,6 +15,7 @@ import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import TelegramIcon from "@mui/icons-material/Telegram";
 import StarBorderIcon from "@mui/icons-material/StarBorder";
 import { searchApi } from "../services";
+import BackToTopButton from "../components/BackToTopButton";
 
 const useStyles = makeStyles({
   img__wrap: {
@@ -61,11 +62,20 @@ const SearchImg = () => {
   const classes = useStyles();
 
   useEffect(() => {
+    setHasMore(true);
+  }, [searchValue]);
+
+  useEffect(() => {
     if (searchValue !== "") {
       searchApi(searchValue, page)
         .then(function (response) {
           console.log("Response Data", response.data.root.children);
-          setSearchData(searchData.concat(response.data.root.children));
+          if (response?.data?.root?.children === undefined) {
+            setHasMore(false);
+            return;
+          } else {
+            setSearchData(searchData.concat(response.data.root.children));
+          }
         })
         .catch(function (error) {
           console.log("error:", error);
@@ -77,7 +87,7 @@ const SearchImg = () => {
     searchApi(searchValue, page)
       .then(function (response) {
         console.log("Response Data", response.data.root.children);
-        setSearchData(response.data.root.children);
+        setSearchData(response?.data?.root?.children);
       })
       .catch(function (error) {
         console.log("error:", error);
@@ -92,13 +102,17 @@ const SearchImg = () => {
 
   return (
     <>
+      <BackToTopButton />
       {/* ------ Searchbar Component ------- */}
       <FormControl className={classes.custom_form_control} variant="outlined">
         <OutlinedInput
           type="text"
           placeholder="search"
           value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
+          onChange={(e) => {
+            setSearchValue(e.target.value);
+            setPage(0);
+          }}
           endAdornment={
             <InputAdornment position="end">
               <IconButton onClick={handleClickSearch} edge="end">
@@ -120,6 +134,11 @@ const SearchImg = () => {
             </h4>
           )
         }
+        endMessage={
+          <p style={{ textAlign: "center", color: "#D9D9D9" }}>
+            <b>Yay! You have seen it all</b>
+          </p>
+        }
       >
         <Box sx={{ flexGrow: 1 }}>
           <Grid
@@ -133,7 +152,7 @@ const SearchImg = () => {
                   <CardMedia
                     className={classes.img__img}
                     component="img"
-                    image={value.fields.image_file_name}
+                    image={value?.fields?.image_file_name}
                     alt="green iguana"
                   />
                   <Box className={classes.img__description}>
